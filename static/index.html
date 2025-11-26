@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Query System</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Document Query System</h1>
+
+        <!-- File Upload Section -->
+        <div class="upload-section">
+            <h2>Upload Documents</h2>
+            <div class="upload-area" id="uploadArea">
+                <p>Drag and drop files here or click to select</p>
+                <input type="file" id="fileInput" multiple accept=".pdf,.md,.png,.jpg,.jpeg,.doc,.docx">
+            </div>
+            <div id="uploadStatus"></div>
+        </div>
+
+        <!-- Query Section -->
+        <div class="query-section">
+            <h2>Ask Questions</h2>
+            <div class="query-form">
+                <textarea id="queryInput" placeholder="Ask a question about your documents..."></textarea>
+                <button id="queryButton">Submit Query</button>
+            </div>
+            <div id="queryResults"></div>
+        </div>
+
+        <!-- Save Conversation Section -->
+        <div class="save-section" id="saveSection" style="display: none;">
+            <h3>Save Conversation</h3>
+            <button id="saveNotion">Save to Notion</button>
+            <button id="saveObsidian">Save to Obsidian</button>
+            <div id="saveStatus"></div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>
