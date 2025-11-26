@@ -1,5 +1,5 @@
 ## ResearchPilot 
-link: https://researchpilot-dozq.onrender.com
+Deployed app: https://researchpilot-dozq.onrender.com
 
 A small web app that lets you **upload documents** (PDF, Word, Markdown, images) and then **ask questions** about them using an LLM via OpenRouter. It extracts text from your files, stores it in a database, and answers queries based only on your uploaded content.
 
