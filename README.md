@@ -48,8 +48,8 @@ A small web app that lets you **upload documents** (PDF, Word, Markdown, images)
    2. **Create and activate a virtual environment (recommended)**
   
    python -m venv .venv
-   .venv\Scripts\activate  # on Windows
-   # or: source .venv/bin/activate  # on macOS/Linux
+   .venv\Scripts\activate on Windows
+   or: source .venv/bin/activate  on macOS/Linux
    3. **Install dependencies**
   
    pip install -r requirements.txt
