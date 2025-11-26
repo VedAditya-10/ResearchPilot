@@ -1,4 +1,3 @@
-
 import logging
 import io
 import PyPDF2
@@ -76,28 +75,7 @@ class PDFProcessor(DocumentProcessor):
             return ""
     
     def _extract_with_ocr(self, file_path: str) -> str:
-        try:
-            import fitz  # PyMuPDF
-            
-            text_parts = []
-            pdf_document = fitz.open(file_path)
-            
-            for page_num in range(len(pdf_document)):
-                page = pdf_document[page_num]
-                pix = page.get_pixmap()
-                img_data = pix.tobytes("png")
-                image = Image.open(io.BytesIO(img_data))
-                
-                ocr_text = pytesseract.image_to_string(image)
-                if ocr_text.strip():
-                    text_parts.append(ocr_text)
-            
-            pdf_document.close()
-            return '\n\n'.join(text_parts)
-            
-        except ImportError:
-            logger.warning("PyMuPDF not available for OCR")
-            return ""
-        except Exception as e:
-            logger.warning(f"OCR extraction failed: {e}")
-            return ""
+        # Note: OCR for PDFs requires PyMuPDF to convert PDF pages to images
+        # Since PyMuPDF is not available, this fallback is disabled
+        logger.warning("PDF OCR fallback requires PyMuPDF, which is not available")
+        return ""

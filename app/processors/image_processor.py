@@ -1,8 +1,10 @@
-
+import logging
 from PIL import Image
 import pytesseract
 from app.processors.document_processor import DocumentProcessor, ProcessingError
 from app.models.data_models import ProcessedDocument
+
+logger = logging.getLogger(__name__)
 
 
 class ImageProcessor(DocumentProcessor):
@@ -36,7 +38,12 @@ class ImageProcessor(DocumentProcessor):
                 image = image.convert('RGB')
             
             # Try OCR
-            text = pytesseract.image_to_string(image)
+            try:
+                text = pytesseract.image_to_string(image)
+            except Exception as e:
+                # Handle TesseractNotFoundError or other pytesseract errors
+                logger.warning(f"Tesseract OCR failed: {e}")
+                return f"OCR extraction failed: {str(e)}"
             
             if text.strip():
                 # Basic cleaning
@@ -46,4 +53,5 @@ class ImageProcessor(DocumentProcessor):
                 return "No readable text found in this image."
                 
         except Exception as e:
-            raise ProcessingError(f"OCR extraction failed: {str(e)}")
+            logger.warning(f"Image processing failed: {e}")
+            raise ProcessingError(f"Failed to process image: {str(e)}")
