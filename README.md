@@ -67,5 +67,7 @@ A small web app that lets you **upload documents** (PDF, Word, Markdown, images)
 5. **Run the app**
   
    python main.py
+   or
+   uvicorn main:app --reload 
    6. **Open in your browser**
-   - Go to `http://localhost:8000/` to upload documents and ask questions.
+   - Go to `http://localhost:8000/` or ` http://127.0.0.1:8000/` to upload documents and ask questions.
