@@ -35,6 +35,7 @@ class DocProcessor(DocumentProcessor):
             return self._extract_from_legacy_doc(file_path)
     
     def _extract_from_docx(self, file_path: str) -> str:
+        doc = None
         try:
             doc = Document(file_path)
             text_parts = []
@@ -55,7 +56,18 @@ class DocProcessor(DocumentProcessor):
                 return "No readable text content found in this document."
                 
         except Exception as e:
-            raise ProcessingError(f"DOCX processing failed: {str(e)}")
+            error_msg = str(e).lower()
+            if 'word/null' in error_msg or 'archive' in error_msg or 'zipfile' in error_msg:
+                raise ProcessingError(f"The DOCX file appears to be corrupted or invalid. Please try re-saving the document or use a different file format.")
+            else:
+                raise ProcessingError(f"DOCX processing failed: {str(e)}")
+        finally:
+            if doc is not None:
+                try:
+                    if hasattr(doc, 'part') and hasattr(doc.part, 'package'):
+                        doc.part.package.close()
+                except:
+                    pass
     
     def _extract_from_legacy_doc(self, file_path: str) -> str:
         try:

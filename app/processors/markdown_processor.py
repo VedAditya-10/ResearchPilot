@@ -40,7 +40,6 @@ class MarkdownProcessor(DocumentProcessor):
             if not content.strip():
                 return "Empty Markdown file."
             
-            # Basic cleaning
             lines = [line.strip() for line in content.split('\n')]
             cleaned_lines = []
             
@@ -50,7 +49,6 @@ class MarkdownProcessor(DocumentProcessor):
             
             result = '\n'.join(cleaned_lines)
             
-            # Remove excessive newlines
             while '\n\n\n' in result:
                 result = result.replace('\n\n\n', '\n\n')
             

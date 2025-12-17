@@ -61,14 +61,12 @@ class SupabaseService:
             raise ValueError("Not connected to Supabase")
         
         try:
-            # Use ilike for case-insensitive search on content
             result = (self.client.table("documents")
                      .select("*")
                      .ilike("content", f"%{query}%")
                      .limit(10)
                      .execute())
             
-            # If no results, try searching by filename
             if not result.data:
                 result = (self.client.table("documents")
                          .select("*")

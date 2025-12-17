@@ -5,40 +5,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document Query System</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/modern-style.css">
 </head>
 
 <body>
-    <div class="container">
-        <h1>Document Query System</h1>
-
-        <!-- File Upload Section -->
-        <div class="upload-section">
-            <h2>Upload Documents</h2>
-            <div class="upload-area" id="uploadArea">
-                <p>Drag and drop files here or click to select</p>
-                <input type="file" id="fileInput" multiple accept=".pdf,.md,.png,.jpg,.jpeg,.doc,.docx">
+    <div class="app-wrapper">
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <i class="fas fa-file-alt"></i>
+                    <h1>ResearchPilot</h1>
+                </div>
             </div>
-            <div id="uploadStatus"></div>
-        </div>
+        </header>
+        <main class="app-main">
+            <div class="content-wrapper">
+                <!-- Query Section -->
+                <section class="card query-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-comments"></i> Ask Questions</h2>
+                        <p class="section-subtitle">Query your documents with natural language</p>
+                    </div>
+                    <div class="query-form">
+                        <div class="input-wrapper">
+                            <textarea id="queryInput" placeholder="What would you like to know about your documents?" maxlength="1000"></textarea>
+                            <div class="char-count">
+                                <span id="charCount">0</span>/1000
+                            </div>
+                        </div>
+                        <button id="queryButton" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                    <div id="queryResults" class="query-results"></div>
+                </section>
 
-        <!-- Query Section -->
-        <div class="query-section">
-            <h2>Ask Questions</h2>
-            <div class="query-form">
-                <textarea id="queryInput" placeholder="Ask a question about your documents..."></textarea>
-                <button id="queryButton">Submit Query</button>
+                <!-- Upload Section -->
+                <section class="card upload-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-cloud-upload-alt"></i> Upload Documents</h2>
+                        <div class="supported-formats">
+                            <span class="file-badge">.pdf</span>
+                            <span class="file-badge">.docx</span>
+                            <span class="file-badge">.doc</span>
+                            <span class="file-badge">.txt</span>
+                            <span class="file-badge">.md</span>
+                            <span class="file-badge">.png</span>
+                            <span class="file-badge">.jpg</span>
+                            <span class="file-badge">.jpeg</span>
+                            <span class="file-badge">.tiff</span>
+                            <span class="file-badge">.bmp</span>
+                            <span class="file-badge">.gif</span>
+                        </div>
+                    </div>
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">
+                            <i class="fas fa-file-import"></i>
+                        </div>
+                        <h3>Drop files here or click to browse</h3>
+                        <p>Drag and drop your documents to get started</p>
+                        <input type="file" id="fileInput" multiple accept=".pdf,.md,.png,.jpg,.jpeg,.doc,.docx,.txt">
+                    </div>
+                    <div id="uploadStatus" class="status-message"></div>
+                    <div id="uploadedFiles" class="uploaded-files"></div>
+                </section>
+
+                <!-- Save Conversation Section -->
+                <section class="card save-section" id="saveSection" style="display: none;">
+                    <div class="section-header">
+                        <h2><i class="fas fa-save"></i> Save Conversation</h2>
+                    </div>
+                    <div class="save-buttons">
+                        <button id="saveNotion" class="btn btn-notion">
+                            <i class="fas fa-bookmark"></i> Save to Notion
+                        </button>
+                        <button id="saveObsidian" class="btn btn-obsidian">
+                            <i class="fas fa-brain"></i> Save to Obsidian
+                        </button>
+                    </div>
+                    <div id="saveStatus" class="status-message"></div>
+                </section>
             </div>
-            <div id="queryResults"></div>
-        </div>
+        </main>
 
-        <!-- Save Conversation Section -->
-        <div class="save-section" id="saveSection" style="display: none;">
-            <h3>Save Conversation</h3>
-            <button id="saveNotion">Save to Notion</button>
-            <button id="saveObsidian">Save to Obsidian</button>
-            <div id="saveStatus"></div>
-        </div>
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>&copy; 2024 Document Query System. All rights reserved.</p>
+        </footer>
     </div>
 
     <script src="/static/app.js"></script>

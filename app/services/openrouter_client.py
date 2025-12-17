@@ -67,7 +67,6 @@ class OpenRouterClient:
             if max_tokens:
                 payload['max_tokens'] = max_tokens
             
-            # Add reasoning support for Grok models
             if settings.openrouter_enable_reasoning and 'grok' in self.model.lower():
                 payload['extra_body'] = {"reasoning": {"enabled": True}}
             
@@ -90,13 +89,10 @@ class OpenRouterClient:
                             logger.warning(f"Rate limited, retrying in {wait_time}s...")
                             time.sleep(wait_time)
                             continue
-                        else:
-                            logger.warning(f"API key {api_key_preview} exhausted, rotating to next key")
-                            self.rotate_api_key()
-                            break
+                        self.rotate_api_key()
+                        break
                     
                     if response.status_code == 401:
-                        logger.warning(f"API key {api_key_preview} invalid, rotating to next key")
                         self.rotate_api_key()
                         break
                     
@@ -143,18 +139,15 @@ class OpenRouterClient:
             if not content:
                 raise OpenRouterError("Empty content in API response")
             
-            # Log reasoning details if available (for Grok models)
             reasoning_details = message.get('reasoning_details')
             if reasoning_details and settings.openrouter_enable_reasoning:
                 try:
                     if isinstance(reasoning_details, dict):
-                        logger.info(f"Grok reasoning tokens: {reasoning_details.get('reasoning_tokens', 'N/A')}")
+                        logger.info(f"Model reasoning tokens: {reasoning_details.get('reasoning_tokens', 'N/A')}")
                     elif isinstance(reasoning_details, list) and reasoning_details:
-                        logger.info(f"Grok reasoning details: {len(reasoning_details)} items")
-                    else:
-                        logger.info(f"Grok reasoning available: {type(reasoning_details)}")
+                        logger.info(f"Model reasoning details: {len(reasoning_details)} items")
                 except Exception:
-                    logger.info("Grok reasoning details present but format unknown")
+                    pass
             
             return content.strip()
             

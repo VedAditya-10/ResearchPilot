@@ -28,7 +28,6 @@ class ProcessedDocument:
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "ProcessedDocument":
-        # Handle datetime conversion
         upload_date = data.get("upload_date")
         if isinstance(upload_date, str):
             upload_date = datetime.fromisoformat(upload_date)
@@ -92,14 +91,12 @@ class Conversation:
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Conversation":
-        # Handle datetime conversion
         timestamp = data.get("timestamp")
         if isinstance(timestamp, str):
             timestamp = datetime.fromisoformat(timestamp)
         elif timestamp is None:
             timestamp = datetime.now()
         
-        # Handle QueryResponse conversion
         response_data = data.get("response", {})
         if isinstance(response_data, dict):
             response = QueryResponse.from_dict(response_data)
@@ -128,7 +125,6 @@ class Conversation:
         }
     
     def format_for_obsidian(self) -> Dict[str, Any]:
-        # Create markdown content
         markdown_content = f"""# Query Session - {self.timestamp.strftime("%Y-%m-%d %H:%M:%S")}
 
 ## Query

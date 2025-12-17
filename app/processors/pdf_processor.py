@@ -1,8 +1,8 @@
 import logging
-import io
 import PyPDF2
 import pdfplumber
 import pytesseract
+from pdf2image import convert_from_path
 from PIL import Image
 from app.processors.document_processor import DocumentProcessor, ProcessingError
 from app.models.data_models import ProcessedDocument
@@ -75,7 +75,26 @@ class PDFProcessor(DocumentProcessor):
             return ""
     
     def _extract_with_ocr(self, file_path: str) -> str:
-        # Note: OCR for PDFs requires PyMuPDF to convert PDF pages to images
-        # Since PyMuPDF is not available, this fallback is disabled
-        logger.warning("PDF OCR fallback requires PyMuPDF, which is not available")
-        return ""
+        try:
+            logger.info("Attempting OCR extraction for scanned PDF")
+            text_parts = []
+            
+            images = convert_from_path(file_path, first_page=1, last_page=20)
+            
+            for page_num, image in enumerate(images, 1):
+                try:
+                    if image.mode != 'L':
+                        image = image.convert('L')
+                    
+                    text = pytesseract.image_to_string(image)
+                    if text.strip():
+                        text_parts.append(f"--- Page {page_num} ---\n{text}")
+                except Exception as e:
+                    logger.warning(f"OCR failed for page {page_num}: {e}")
+                    continue
+            
+            return '\n\n'.join(text_parts) if text_parts else ""
+            
+        except Exception as e:
+            logger.warning(f"OCR extraction failed: {e}")
+            return ""

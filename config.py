@@ -9,8 +9,8 @@ class Settings(BaseSettings):
     
     openrouter_api_key: Optional[str] = None
     openrouter_api_keys: Optional[str] = None
-    openrouter_model: str = "x-ai/grok-4.1-fast:free"
-    openrouter_enable_reasoning: bool = True
+    openrouter_model: str = "nvidia/nemotron-nano-12b-v2-vl:free"
+    openrouter_enable_reasoning: bool = False
     openrouter_site_url: str = "http://localhost:8000"
     openrouter_site_name: str = "Document Query System"
     

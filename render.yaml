@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: researchpilot
+    env: docker
+    plan: starter
+    autoDeploy: true
+    healthCheckPath: /status
+    dockerfilePath: Dockerfile
+    
+    disk:
+      name: uploads
+      mountPath: /app/uploads
+      sizeGB: 5
+    
+    envVars:
+      # Set these in Render dashboard or via blueprint values
+      - key: OPENROUTER_API_KEYS
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: OBSIDIAN_API_URL
+        sync: false
+      - key: OBSIDIAN_API_KEY
+        sync: false
+      - key: OPENROUTER_SITE_URL
+        sync: false
+      - key: LOG_LEVEL
+        value: INFO

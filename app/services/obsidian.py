@@ -20,14 +20,11 @@ class ObsidianService:
             return False
         
         try:
-            # Test API connection - try Bearer token format
             headers = {
                 'Authorization': f'Bearer {self.api_key}',
                 'Content-Type': 'application/json'
             }
             
-            # Test with a simple endpoint
-            # Test connection to HTTP API
             response = requests.get(f"{self.api_url}/", headers=headers, timeout=5)
             return response.status_code == 200
             
@@ -44,11 +41,9 @@ class ObsidianService:
             return False
         
         try:
-            # Create filename with timestamp
             timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
             filename = f"Document Query - {timestamp}.md"
             
-            # Create markdown content
             content = f"""# Document Query - {datetime.now().strftime("%Y-%m-%d %H:%M")}
 
 ## Question
@@ -65,17 +60,15 @@ class ObsidianService:
 *Saved from Document Query System*
 """
             
-            # API request to create note using Obsidian Local REST API format
             headers = {
                 'Authorization': f'Bearer {self.api_key}',
-                'Content-Type': 'text/plain'  # Obsidian expects plain text content
+                'Content-Type': 'text/plain'
             }
             
-            # Use the correct endpoint format for creating files
             response = requests.put(
                 f"{self.api_url}/vault/{filename}",
                 headers=headers,
-                data=content,  # Send content as plain text, not JSON
+                data=content,
                 timeout=10
             )
             

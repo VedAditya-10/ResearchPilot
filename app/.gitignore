@@ -1,3 +1,13 @@
-*.env
+# Python cache
 __pycache__/
-*.log
+*.pyc
+
+# Environment variables
+.env
+
+# Uploads
+uploads/
+
+# Editor files
+.vscode/
+.DS_Store

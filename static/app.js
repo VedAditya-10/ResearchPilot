@@ -9,8 +9,44 @@ class DocumentQueryApp {
     init() {
         this.setupFileUpload();
         this.setupQuery();
+        this.setupCharacterCount();
         this.setupSaveConversation();
+        this.setupNewDocumentButton();
+        this.setupClearSearchButtons();
         this.updateQueryButtonState();
+    }
+
+    setupNewDocumentButton() {
+        const newDocButton = document.getElementById('newDocument');
+        const fileInput = document.getElementById('fileInput');
+        
+        if (newDocButton && fileInput) {
+            newDocButton.addEventListener('click', () => {
+                fileInput.click();
+            });
+        }
+    }
+
+    setupClearSearchButtons() {
+        const clearSearch1 = document.getElementById('clearSearch');
+        const clearSearch2 = document.getElementById('clearSearch2');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const uploadedFiles = document.getElementById('uploadedFiles');
+        const queryResults = document.getElementById('queryResults');
+        
+        const clearAll = () => {
+            if (uploadStatus) uploadStatus.innerHTML = '';
+            if (uploadedFiles) uploadedFiles.innerHTML = '';
+            if (queryResults) queryResults.innerHTML = '';
+            this.updateQueryButtonState();
+        };
+        
+        if (clearSearch1) {
+            clearSearch1.addEventListener('click', clearAll);
+        }
+        if (clearSearch2) {
+            clearSearch2.addEventListener('click', clearAll);
+        }
     }
 
     // File Upload Functionality

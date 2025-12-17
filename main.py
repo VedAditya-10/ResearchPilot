@@ -108,6 +108,9 @@ def upload_file(file: UploadFile = File(...)):
     if not file.filename:
         raise HTTPException(status_code=400, detail="Filename is required")
     
+    if file.size and file.size > 50 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="File too large. Maximum size is 50MB")
+    
     file_extension = os.path.splitext(file.filename)[1].lower()
     processor = processor_factory.get_processor("", file_extension)
     if not processor:
@@ -131,7 +134,17 @@ def upload_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=422, detail=str(e))
     finally:
         if os.path.exists(file_path):
-            os.remove(file_path)
+            try:
+                os.remove(file_path)
+            except PermissionError:
+                import time
+                time.sleep(0.1)
+                try:
+                    os.remove(file_path)
+                except PermissionError:
+                    logger.warning(f"Could not delete temporary file: {file_path}")
+            except Exception as e:
+                logger.warning(f"Error deleting temporary file {file_path}: {e}")
 
 
 @app.post("/query", response_model=QueryResponse)
