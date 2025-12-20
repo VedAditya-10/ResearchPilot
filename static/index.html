@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Query System</title>
+    <title>ResearchPilot</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/modern-style.css">
 </head>
@@ -21,6 +21,70 @@
         </header>
         <main class="app-main">
             <div class="content-wrapper">
+                <!-- Settings Section -->
+                <section class="card settings-section">
+                    <div class="section-header settings-toggle" id="settingsToggle">
+                        <h2><i class="fas fa-cog"></i> API Settings</h2>
+                        <i class="fas fa-chevron-down toggle-icon" id="toggleIcon"></i>
+                    </div>
+                    <div class="settings-content" id="settingsContent">
+                        <!-- Table Header -->
+                        <div class="settings-table-header">
+                            <span class="header-key">KEY</span>
+                            <span class="header-value">VALUE</span>
+                        </div>
+                        
+                        <!-- OpenRouter Settings -->
+                        <div class="settings-group">
+                            <div class="group-label">OpenRouter (Required)</div>
+                            <div class="setting-row">
+                                <div class="setting-key">API_KEY</div>
+                                <div class="setting-value">
+                                    <input type="password" id="apiKeyInput" placeholder="sk-or-v1-..." autocomplete="off">
+                                    <button type="button" class="toggle-visibility" data-target="apiKeyInput">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="setting-help">
+                                <i class="fas fa-info-circle"></i>
+                                Don't have an API key? <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer">Get one free from OpenRouter</a>
+                            </div>
+                            <div class="setting-row">
+                                <div class="setting-key">MODEL_NAME</div>
+                                <div class="setting-value">
+                                    <input type="text" id="modelNameInput" placeholder="e.g., mistralai/mistral-7b-instruct:free">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Obsidian Settings -->
+                        <div class="settings-group">
+                            <div class="group-label">Obsidian (Optional)</div>
+                            <div class="setting-row">
+                                <div class="setting-key">OBSIDIAN_API_KEY</div>
+                                <div class="setting-value">
+                                    <input type="password" id="obsidianKeyInput" placeholder="Leave empty to disable" autocomplete="off">
+                                    <button type="button" class="toggle-visibility" data-target="obsidianKeyInput">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="setting-row">
+                                <div class="setting-key">OBSIDIAN_API_URL</div>
+                                <div class="setting-value">
+                                    <input type="text" id="obsidianUrlInput" placeholder="http://localhost:27123" value="http://localhost:27123">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button id="saveSettingsBtn" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Settings
+                        </button>
+                        <div id="settingsStatus" class="status-message"></div>
+                    </div>
+                </section>
+
                 <!-- Query Section -->
                 <section class="card query-section">
                     <div class="section-header">
@@ -95,7 +159,7 @@
         </footer>
     </div>
 
-    <script src="/static/app.js"></script>
+    <script src="/static/app.js?v=4"></script>
 </body>
 
 </html>

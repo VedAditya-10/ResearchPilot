@@ -2,9 +2,9 @@
 import os
 import logging
 import shutil
-from typing import List
+from typing import List, Optional
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, UploadFile, File, Request
+from fastapi import FastAPI, HTTPException, UploadFile, File, Request, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
@@ -60,6 +60,9 @@ processor_factory.register_processor(MarkdownProcessor())
 processor_factory.register_processor(DocProcessor())
 class QueryRequest(BaseModel):
     question: str
+    api_key: Optional[str] = None
+    model: Optional[str] = None
+    session_id: Optional[str] = None
 
 class QueryResponse(BaseModel):
     answer: str
@@ -104,7 +107,7 @@ def root():
 
 
 @app.post("/upload")
-def upload_file(file: UploadFile = File(...)):
+def upload_file(file: UploadFile = File(...), session_id: Optional[str] = Form(None)):
     if not file.filename:
         raise HTTPException(status_code=400, detail="Filename is required")
     
@@ -122,6 +125,9 @@ def upload_file(file: UploadFile = File(...)):
             shutil.copyfileobj(file.file, buffer)
         
         processed_doc = processor.process_document(file_path, file.filename)
+        # Set session_id on the document
+        processed_doc.session_id = session_id
+        logger.info(f"Uploading document with session_id: {session_id}")
         document_id = db_service.store_document(processed_doc)
         
         return {
@@ -152,12 +158,40 @@ def query_documents(request: QueryRequest):
     if not request.question.strip():
         raise HTTPException(status_code=400, detail="Question cannot be empty")
     
-    result = query_engine.process_query(request.question)
-    return QueryResponse(
-        answer=result.answer,
-        source_documents=result.source_documents,
-        processing_time=result.processing_time
-    )
+    # Validate that API credentials are provided
+    if not request.api_key or not request.model:
+        raise HTTPException(status_code=400, detail="API Key and Model Name are required. Please configure them in Settings.")
+    
+    try:
+        logger.info(f"Processing query with session_id: {request.session_id}")
+        result = query_engine.process_query(
+            request.question, 
+            api_key=request.api_key, 
+            model=request.model,
+            session_id=request.session_id
+        )
+        return QueryResponse(
+            answer=result.answer,
+            source_documents=result.source_documents,
+            processing_time=result.processing_time
+        )
+    except QueryEngineError as e:
+        # Return specific error message from query engine
+        error_message = str(e)
+        
+        # Make error messages more user-friendly
+        if "Invalid OpenRouter API Key" in error_message or "401" in error_message:
+            raise HTTPException(status_code=401, detail="Invalid API Key. Please check your OpenRouter API key.")
+        elif "All API keys exhausted" in error_message:
+            raise HTTPException(status_code=429, detail="API key exhausted or rate limited. Please wait or use a different key.")
+        elif "No documents available" in error_message:
+            raise HTTPException(status_code=404, detail="No documents found. Please upload documents first.")
+        else:
+            # Return the original error message for other cases
+            raise HTTPException(status_code=500, detail=error_message)
+    except Exception as e:
+        logger.error(f"Unexpected error in query endpoint: {e}")
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
 @app.get("/api-status")
 def get_api_status():

@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import pytesseract
 from PIL import Image
 from app.processors.document_processor import DocumentProcessor, ProcessingError
@@ -20,6 +21,9 @@ class ImageProcessor(DocumentProcessor):
         try:
             file_info = self._get_file_info(file_path, filename)
             text_content = self._extract_metadata_from_image(file_path, filename)
+            
+            # Clean the text to remove null bytes and other problematic characters
+            text_content = self._clean_text(text_content)
             
             return ProcessedDocument(
                 filename=filename,
@@ -76,12 +80,17 @@ Error: The image could not be processed. Please check if the file is a valid ima
     
     def _extract_text_with_ocr(self, image: Image.Image) -> str:
         try:
+            if not os.path.exists(pytesseract.pytesseract.tesseract_cmd):
+                logger.warning(f"Tesseract not found at: {pytesseract.pytesseract.tesseract_cmd}")
+                return ""
+
             if image.mode != 'L':
                 image = image.convert('L')
             
             text = pytesseract.image_to_string(image)
             return text.strip()
         except Exception as e:
+            # Catch ALL exceptions to ensure upload never fails due to OCR
             logger.warning(f"OCR extraction failed: {e}")
             return ""
     
@@ -92,3 +101,32 @@ Error: The image could not be processed. Please check if the file is a valid ima
             return f"{size_bytes / 1024:.1f} KB"
         else:
             return f"{size_bytes / (1024 * 1024):.1f} MB"
+    
+    def _clean_text(self, text: str) -> str:
+        """
+        Clean extracted text to remove characters that PostgreSQL cannot store.
+        Removes null bytes and other problematic Unicode characters.
+        """
+        if not text:
+            return ""
+        
+        # Remove null bytes (\x00 or \u0000)
+        text = text.replace('\x00', '')
+        
+        # Remove other control characters except newlines and tabs
+        cleaned_chars = []
+        for char in text:
+            # Keep printable characters, newlines, tabs, and carriage returns
+            if char.isprintable() or char in ['\n', '\t', '\r']:
+                cleaned_chars.append(char)
+            # Replace other control characters with space
+            elif ord(char) < 32:
+                cleaned_chars.append(' ')
+        
+        cleaned_text = ''.join(cleaned_chars)
+        
+        # Remove excessive whitespace
+        cleaned_text = re.sub(r'\s+', ' ', cleaned_text)
+        cleaned_text = re.sub(r'\n\s+\n', '\n\n', cleaned_text)
+        
+        return cleaned_text.strip()

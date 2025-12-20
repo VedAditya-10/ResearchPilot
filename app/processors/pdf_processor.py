@@ -1,4 +1,5 @@
 import logging
+import re
 import PyPDF2
 import pdfplumber
 import pytesseract
@@ -19,6 +20,9 @@ class PDFProcessor(DocumentProcessor):
         try:
             file_info = self._get_file_info(file_path, filename)
             text_content = self._extract_text_from_pdf(file_path)
+            
+            # Clean the text to remove null bytes and other problematic characters
+            text_content = self._clean_text(text_content)
             
             return ProcessedDocument(
                 filename=filename,
@@ -98,3 +102,32 @@ class PDFProcessor(DocumentProcessor):
         except Exception as e:
             logger.warning(f"OCR extraction failed: {e}")
             return ""
+    
+    def _clean_text(self, text: str) -> str:
+        """
+        Clean extracted text to remove characters that PostgreSQL cannot store.
+        Removes null bytes and other problematic Unicode characters.
+        """
+        if not text:
+            return ""
+        
+        # Remove null bytes (\x00 or \u0000)
+        text = text.replace('\x00', '')
+        
+        # Remove other control characters except newlines and tabs
+        cleaned_chars = []
+        for char in text:
+            # Keep printable characters, newlines, tabs, and carriage returns
+            if char.isprintable() or char in ['\n', '\t', '\r']:
+                cleaned_chars.append(char)
+            # Replace other control characters with space
+            elif ord(char) < 32:
+                cleaned_chars.append(' ')
+        
+        cleaned_text = ''.join(cleaned_chars)
+        
+        # Remove excessive whitespace
+        cleaned_text = re.sub(r'\s+', ' ', cleaned_text)
+        cleaned_text = re.sub(r'\n\s+\n', '\n\n', cleaned_text)
+        
+        return cleaned_text.strip()

@@ -3,50 +3,177 @@
 class DocumentQueryApp {
     constructor() {
         this.currentConversation = null;
+        this.sessionId = this.getOrCreateSessionId();
         this.init();
     }
 
     init() {
+        this.setupSettings();
         this.setupFileUpload();
         this.setupQuery();
         this.setupCharacterCount();
         this.setupSaveConversation();
-        this.setupNewDocumentButton();
-        this.setupClearSearchButtons();
         this.updateQueryButtonState();
+        console.log('Session ID:', this.sessionId);
     }
 
-    setupNewDocumentButton() {
-        const newDocButton = document.getElementById('newDocument');
-        const fileInput = document.getElementById('fileInput');
+    // Session Management
+    getOrCreateSessionId() {
+        // Check if session_id exists in sessionStorage
+        let sessionId = sessionStorage.getItem('session_id');
         
-        if (newDocButton && fileInput) {
-            newDocButton.addEventListener('click', () => {
-                fileInput.click();
+        if (!sessionId) {
+            // Generate a new session ID (UUID v4)
+            sessionId = this.generateUUID();
+            sessionStorage.setItem('session_id', sessionId);
+            console.log('Created new session ID:', sessionId);
+        } else {
+            console.log('Using existing session ID:', sessionId);
+        }
+        
+        return sessionId;
+    }
+
+    generateUUID() {
+        // Simple UUID v4 generator
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    // Settings Functionality
+    setupSettings() {
+        const settingsToggle = document.getElementById('settingsToggle');
+        const settingsContent = document.getElementById('settingsContent');
+        const toggleIcon = document.getElementById('toggleIcon');
+        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        const settingsStatus = document.getElementById('settingsStatus');
+
+        // Load saved settings from sessionStorage
+        this.loadSettings();
+
+        // Toggle settings visibility
+        if (settingsToggle) {
+            settingsToggle.addEventListener('click', () => {
+                settingsContent.classList.toggle('show');
+                toggleIcon.classList.toggle('collapsed');
             });
         }
+
+        // Save settings button
+        if (saveSettingsBtn) {
+            saveSettingsBtn.addEventListener('click', () => {
+                this.saveSettings();
+            });
+        }
+
+        // Password visibility toggles
+        document.querySelectorAll('.toggle-visibility').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                const icon = btn.querySelector('i');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        });
     }
 
-    setupClearSearchButtons() {
-        const clearSearch1 = document.getElementById('clearSearch');
-        const clearSearch2 = document.getElementById('clearSearch2');
-        const uploadStatus = document.getElementById('uploadStatus');
-        const uploadedFiles = document.getElementById('uploadedFiles');
-        const queryResults = document.getElementById('queryResults');
-        
-        const clearAll = () => {
-            if (uploadStatus) uploadStatus.innerHTML = '';
-            if (uploadedFiles) uploadedFiles.innerHTML = '';
-            if (queryResults) queryResults.innerHTML = '';
-            this.updateQueryButtonState();
+    loadSettings() {
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        const modelNameInput = document.getElementById('modelNameInput');
+        const obsidianKeyInput = document.getElementById('obsidianKeyInput');
+        const obsidianUrlInput = document.getElementById('obsidianUrlInput');
+
+        if (apiKeyInput) apiKeyInput.value = sessionStorage.getItem('openrouter_api_key') || '';
+        if (modelNameInput) modelNameInput.value = sessionStorage.getItem('openrouter_model') || '';
+        if (obsidianKeyInput) obsidianKeyInput.value = sessionStorage.getItem('obsidian_api_key') || '';
+        if (obsidianUrlInput) obsidianUrlInput.value = sessionStorage.getItem('obsidian_api_url') || 'http://localhost:27123';
+    }
+
+    saveSettings() {
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        const modelNameInput = document.getElementById('modelNameInput');
+        const obsidianKeyInput = document.getElementById('obsidianKeyInput');
+        const obsidianUrlInput = document.getElementById('obsidianUrlInput');
+        const settingsStatus = document.getElementById('settingsStatus');
+
+        console.log('Save Settings - Input elements found:', {
+            apiKeyInput: !!apiKeyInput,
+            modelNameInput: !!modelNameInput,
+            apiKeyValue: apiKeyInput?.value?.substring(0, 10) + '...',
+            modelValue: modelNameInput?.value
+        });
+
+        const apiKey = apiKeyInput?.value?.trim() || '';
+        const modelName = modelNameInput?.value?.trim() || '';
+
+        // Validate required fields
+        if (!apiKey || !modelName) {
+            this.showStatus(settingsStatus, 'API Key and Model Name are required', 'error');
+            return;
+        }
+
+        // Save to sessionStorage
+        sessionStorage.setItem('openrouter_api_key', apiKey);
+        sessionStorage.setItem('openrouter_model', modelName);
+        sessionStorage.setItem('obsidian_api_key', obsidianKeyInput?.value?.trim() || '');
+        sessionStorage.setItem('obsidian_api_url', obsidianUrlInput?.value?.trim() || 'http://localhost:27123');
+
+        console.log('Settings saved to sessionStorage:', {
+            api_key: sessionStorage.getItem('openrouter_api_key')?.substring(0, 10) + '...',
+            model: sessionStorage.getItem('openrouter_model')
+        });
+
+        this.showStatus(settingsStatus, 'Settings saved successfully!', 'success');
+        this.updateQueryButtonState();
+
+        // Auto-hide success message
+        setTimeout(() => {
+            settingsStatus.style.display = 'none';
+        }, 3000);
+    }
+
+    getSettings() {
+        const settings = {
+            api_key: sessionStorage.getItem('openrouter_api_key') || '',
+            model: sessionStorage.getItem('openrouter_model') || '',
+            obsidian_api_key: sessionStorage.getItem('obsidian_api_key') || '',
+            obsidian_api_url: sessionStorage.getItem('obsidian_api_url') || 'http://localhost:27123'
         };
-        
-        if (clearSearch1) {
-            clearSearch1.addEventListener('click', clearAll);
-        }
-        if (clearSearch2) {
-            clearSearch2.addEventListener('click', clearAll);
-        }
+        console.log('getSettings called:', {
+            api_key: settings.api_key ? settings.api_key.substring(0, 10) + '...' : 'EMPTY',
+            model: settings.model || 'EMPTY'
+        });
+        return settings;
+    }
+
+    hasRequiredSettings() {
+        const settings = this.getSettings();
+        return settings.api_key && settings.model;
+    }
+
+
+
+    setupCharacterCount() {
+        const queryInput = document.getElementById('queryInput');
+        const charCount = document.getElementById('charCount');
+        if (!queryInput || !charCount) return;
+        const update = () => {
+            charCount.textContent = queryInput.value.length;
+        };
+        queryInput.addEventListener('input', update);
+        update();
     }
 
     // File Upload Functionality
@@ -144,6 +271,7 @@ class DocumentQueryApp {
     async uploadFile(file) {
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('session_id', this.sessionId);
 
         try {
             const response = await fetch('/upload', {
@@ -215,12 +343,19 @@ class DocumentQueryApp {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds
 
+            const settings = this.getSettings();
+
             const response = await fetch('/query', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ question }),
+                body: JSON.stringify({ 
+                    question,
+                    api_key: settings.api_key,
+                    model: settings.model,
+                    session_id: this.sessionId
+                }),
                 signal: controller.signal
             });
 
@@ -303,10 +438,39 @@ class DocumentQueryApp {
         // SECURITY FIX: Escape HTML first, then format
         const safeAnswer = this.escapeHtml(answer);
 
-        // Now do formatting on the safe text
-        const formatted = safeAnswer
+        // Convert markdown to HTML (basic patterns)
+        let formatted = safeAnswer;
+        
+        // Bold: **text** -> <strong>text</strong>
+        formatted = formatted.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        
+        // Italic: *text* -> <em>text</em> (but not ** which is already handled)
+        formatted = formatted.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+        
+        // Code: `code` -> <code>code</code>
+        formatted = formatted.replace(/`(.+?)`/g, '<code>$1</code>');
+        
+        // Numbered lists: 1. item -> <ol><li>item</li></ol>
+        formatted = formatted.replace(/^(\d+)\.\s+(.+)$/gm, '<li-num data-num="$1">$2</li-num>');
+        
+        // Bullet lists: - item or * item -> <ul><li>item</li></ul>
+        formatted = formatted.replace(/^[\-\*]\s+(.+)$/gm, '<li-bullet>$1</li-bullet>');
+        
+        // Convert line breaks and paragraphs
+        formatted = formatted
             .replace(/\n\n/g, '</p><p>')
             .replace(/\n/g, '<br>');
+        
+        // Wrap consecutive list items in proper list tags
+        formatted = formatted.replace(/(<li-num[^>]*>.*?<\/li-num>(\s|<br>)*)+/g, (match) => {
+            const items = match.replace(/<li-num data-num="\d+">/g, '<li>').replace(/<\/li-num>/g, '</li>').replace(/<br>/g, '');
+            return `<ol>${items}</ol>`;
+        });
+        
+        formatted = formatted.replace(/(<li-bullet>.*?<\/li-bullet>(\s|<br>)*)+/g, (match) => {
+            const items = match.replace(/<li-bullet>/g, '<li>').replace(/<\/li-bullet>/g, '</li>').replace(/<br>/g, '');
+            return `<ul>${items}</ul>`;
+        });
 
         return `<p>${formatted}</p>`;
     }
@@ -388,12 +552,15 @@ class DocumentQueryApp {
         const queryButton = document.getElementById('queryButton');
         const uploadStatus = document.getElementById('uploadStatus');
 
-        // Check if files were successfully uploaded
+        // Check if files were successfully uploaded AND settings are configured
         const hasUploadedFiles = uploadStatus.textContent.includes('Successfully uploaded');
+        const hasSettings = this.hasRequiredSettings();
 
-        queryButton.disabled = !hasUploadedFiles;
+        queryButton.disabled = !(hasUploadedFiles && hasSettings);
 
-        if (!hasUploadedFiles) {
+        if (!hasSettings) {
+            queryButton.title = 'Please configure API settings first';
+        } else if (!hasUploadedFiles) {
             queryButton.title = 'Please upload files first';
         } else {
             queryButton.title = '';

@@ -14,6 +14,7 @@ class ProcessedDocument:
     upload_date: datetime = field(default_factory=datetime.now)
     file_size: int = 0
     metadata: Dict[str, Any] = field(default_factory=dict)
+    session_id: Optional[str] = None
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -23,7 +24,8 @@ class ProcessedDocument:
             "content": self.content,
             "upload_date": self.upload_date.isoformat(),
             "file_size": self.file_size,
-            "metadata": self.metadata
+            "metadata": self.metadata,
+            "session_id": self.session_id
         }
     
     @classmethod
@@ -41,7 +43,8 @@ class ProcessedDocument:
             content=data.get("content", ""),
             upload_date=upload_date,
             file_size=data.get("file_size", 0),
-            metadata=data.get("metadata", {})
+            metadata=data.get("metadata", {}),
+            session_id=data.get("session_id")
         )
 
 

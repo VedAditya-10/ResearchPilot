@@ -1,6 +1,6 @@
 
 import logging
-from typing import List
+from typing import List, Optional
 from supabase import create_client, Client
 from app.models.data_models import ProcessedDocument
 from config import settings
@@ -45,34 +45,45 @@ class SupabaseService:
         except Exception as e:
             raise ValueError(f"Failed to store document: {e}")
     
-    def get_all_documents(self) -> List[ProcessedDocument]:
+    def get_all_documents(self, session_id: Optional[str] = None) -> List[ProcessedDocument]:
         if not self.client:
             raise ValueError("Not connected to Supabase")
         
         try:
-            result = self.client.table("documents").select("*").order("upload_date", desc=True).execute()
+            query = self.client.table("documents").select("*")
+            
+            # Filter by session_id if provided
+            if session_id:
+                query = query.eq("session_id", session_id)
+            
+            result = query.order("upload_date", desc=True).execute()
             return [ProcessedDocument.from_dict(doc) for doc in result.data]
             
         except Exception as e:
             raise ValueError(f"Failed to retrieve documents: {e}")
     
-    def search_documents(self, query: str) -> List[ProcessedDocument]:
+    def search_documents(self, query: str, session_id: Optional[str] = None) -> List[ProcessedDocument]:
         if not self.client:
             raise ValueError("Not connected to Supabase")
         
         try:
-            result = (self.client.table("documents")
-                     .select("*")
-                     .ilike("content", f"%{query}%")
-                     .limit(10)
-                     .execute())
+            # Search in content first
+            content_query = self.client.table("documents").select("*").ilike("content", f"%{query}%")
             
+            # Filter by session_id if provided
+            if session_id:
+                content_query = content_query.eq("session_id", session_id)
+            
+            result = content_query.limit(10).execute()
+            
+            # If no results, search by filename
             if not result.data:
-                result = (self.client.table("documents")
-                         .select("*")
-                         .ilike("filename", f"%{query}%")
-                         .limit(10)
-                         .execute())
+                filename_query = self.client.table("documents").select("*").ilike("filename", f"%{query}%")
+                
+                if session_id:
+                    filename_query = filename_query.eq("session_id", session_id)
+                
+                result = filename_query.limit(10).execute()
             
             return [ProcessedDocument.from_dict(doc) for doc in result.data]
             

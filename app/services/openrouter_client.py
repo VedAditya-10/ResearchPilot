@@ -40,79 +40,76 @@ class OpenRouterClient:
         self.current_key_index = (self.current_key_index + 1) % len(self.api_keys)
         logger.info(f"Rotated to next API key (index: {self.current_key_index})")
     
-    def chat_completion(self, messages: List[Dict[str, str]], max_tokens: int = None) -> Dict[str, Any]:
-        if not self.api_keys:
-            raise OpenRouterError("No OpenRouter API keys configured")
+    def chat_completion(self, messages: List[Dict[str, str]], max_tokens: int = None, api_key: str = None, model: str = None) -> Dict[str, Any]:
+        # Use runtime credentials if provided, otherwise fall back to configured keys
+        use_api_key = api_key if api_key else self.get_current_api_key() if self.api_keys else None
+        use_model = model if model else self.model
         
-        max_key_attempts = len(self.api_keys)
+        if not use_api_key:
+            raise OpenRouterError("No OpenRouter API key provided")
         
-        for key_attempt in range(max_key_attempts):
-            current_api_key = self.get_current_api_key()
-            api_key_preview = current_api_key[:8] + "..." if len(current_api_key) > 8 else "short_key"
-            logger.info(f"Using OpenRouter API key: {api_key_preview} (attempt {key_attempt + 1}/{max_key_attempts})")
-            
-            headers = {
-                'Authorization': f'Bearer {current_api_key}',
-                'HTTP-Referer': settings.openrouter_site_url,
-                'X-Title': settings.openrouter_site_name,
-                'Content-Type': 'application/json',
-            }
-            
-            payload = {
-                'model': self.model,
-                'messages': messages,
-                'provider': {'sort': 'throughput'}
-            }
-            
-            if max_tokens:
-                payload['max_tokens'] = max_tokens
-            
-            if settings.openrouter_enable_reasoning and 'grok' in self.model.lower():
-                payload['extra_body'] = {"reasoning": {"enabled": True}}
-            
-            for attempt in range(3):
-                try:
-                    start_time = time.time()
-                    
-                    response = self.session.post(
-                        f"{self.base_url}/chat/completions",
-                        headers=headers,
-                        json=payload,
-                        timeout=self.timeout
-                    )
-                    
-                    processing_time = time.time() - start_time
-                    
-                    if response.status_code == 429:
-                        if attempt < 2:
-                            wait_time = (2 ** attempt) * 1
-                            logger.warning(f"Rate limited, retrying in {wait_time}s...")
-                            time.sleep(wait_time)
-                            continue
-                        self.rotate_api_key()
-                        break
-                    
-                    if response.status_code == 401:
-                        self.rotate_api_key()
-                        break
-                    
-                    response.raise_for_status()
-                    
-                    result = response.json()
-                    result['processing_time'] = processing_time
-                    return result
-                    
-                except requests.exceptions.RequestException as e:
+        api_key_preview = use_api_key[:8] + "..." if len(use_api_key) > 8 else "short_key"
+        logger.info(f"Using OpenRouter API key: {api_key_preview}, model: {use_model}")
+        
+        headers = {
+            'Authorization': f'Bearer {use_api_key}',
+            'HTTP-Referer': settings.openrouter_site_url,
+            'X-Title': settings.openrouter_site_name,
+            'Content-Type': 'application/json',
+        }
+        
+        payload = {
+            'model': use_model,
+            'messages': messages,
+            'provider': {'sort': 'throughput'}
+        }
+        
+        if max_tokens:
+            payload['max_tokens'] = max_tokens
+        
+        if settings.openrouter_enable_reasoning and 'grok' in use_model.lower():
+            payload['extra_body'] = {"reasoning": {"enabled": True}}
+        
+        for attempt in range(3):
+            try:
+                start_time = time.time()
+                
+                response = self.session.post(
+                    f"{self.base_url}/chat/completions",
+                    headers=headers,
+                    json=payload,
+                    timeout=self.timeout
+                )
+                
+                processing_time = time.time() - start_time
+                
+                if response.status_code == 429:
                     if attempt < 2:
                         wait_time = (2 ** attempt) * 1
-                        logger.warning(f"Network error, retrying in {wait_time}s: {e}")
+                        logger.warning(f"Rate limited, retrying in {wait_time}s...")
                         time.sleep(wait_time)
                         continue
-                    else:
-                        logger.error(f"Network error after retries with key {api_key_preview}: {e}")
-                        break
+                    raise OpenRouterError("API key rate limited. Please wait or use a different key.")
+                
+                if response.status_code == 401:
+                    raise OpenRouterError("Invalid OpenRouter API Key")
+                
+                response.raise_for_status()
+                
+                result = response.json()
+                result['processing_time'] = processing_time
+                return result
+                
+            except requests.exceptions.RequestException as e:
+                if attempt < 2:
+                    wait_time = (2 ** attempt) * 1
+                    logger.warning(f"Network error, retrying in {wait_time}s: {e}")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    raise OpenRouterError(f"Network error: {str(e)}")
         
-        raise OpenRouterError("All API keys exhausted or failed")
+        raise OpenRouterError("Failed to get response from OpenRouter")
     
     def get_api_key_status(self) -> Dict[str, Any]:
         return {
