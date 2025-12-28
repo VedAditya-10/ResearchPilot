@@ -1,5 +1,5 @@
 <p align='center'>
-  **Built with ❤️ for efficient document querying**  
+  Built with ❤️ for efficient document querying
 </p>
 
 # ResearchPilot
