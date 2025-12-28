@@ -1,3 +1,5 @@
+**Built with ❤️ for efficient document research**
+
 # ResearchPilot
 
 **Deployed App**: https://researchpilot-dozq.onrender.com
