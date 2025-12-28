@@ -1,4 +1,6 @@
-**Built with ❤️ for efficient document research**
+<p align='center'
+  Built with ❤️ for efficient document querying > 
+</p>
 
 # ResearchPilot
 
