@@ -1,3 +1,7 @@
+<p align='center'>
+  Built with ❤️ for efficient document querying
+</p>
+
 # ResearchPilot
 
 **Deployed App**: https://researchpilot-dozq.onrender.com
@@ -216,4 +220,3 @@ Contributions welcome! Please feel free to submit issues or pull requests.
 
 ---
 
-**Built with ❤️ for efficient document research**
